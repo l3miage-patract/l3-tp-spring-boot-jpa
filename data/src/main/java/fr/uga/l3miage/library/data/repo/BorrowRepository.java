@@ -2,9 +2,15 @@ package fr.uga.l3miage.library.data.repo;
 
 import fr.uga.l3miage.library.data.domain.Borrow;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -45,8 +51,14 @@ public class BorrowRepository implements CRUDRepository<String, Borrow> {
      * @return la liste des emprunts en cours
      */
     public List<Borrow> findInProgressByUser(String userId) {
-        // TODO
-        return null;
+
+         String query = "SELECT b FROM Borrow b WHERE b.borrower.id = :userId AND b.finished = FALSE";
+
+         List<Borrow> res = this.entityManager.createQuery(query, Borrow.class)
+                                .setParameter("userId", userId)         
+                                .getResultList();
+
+        return res;
     }
 
     /**
@@ -56,8 +68,20 @@ public class BorrowRepository implements CRUDRepository<String, Borrow> {
      * @return le nombre de livre
      */
     public int countBorrowedBooksByUser(String userId) {
-        // TODO
-        return 0;
+        String query = "SELECT b FROM Borrow b WHERE b.borrower.id = :userId";
+
+         List<Borrow> brws =  this.entityManager.createQuery(query, Borrow.class)
+                                .setParameter("userId", userId)
+                                .getResultList();
+
+        int count = 0;
+
+        for (Borrow borrow : brws) {
+            count += borrow.getBooks().size();
+        }
+ 
+
+        return count;
     }
 
     /**
@@ -67,8 +91,20 @@ public class BorrowRepository implements CRUDRepository<String, Borrow> {
      * @return le nombre de livre
      */
     public int countCurrentBorrowedBooksByUser(String userId) {
-        // TODO
-        return 0;
+        String query = "SELECT b FROM Borrow b WHERE b.borrower.id = :userId AND b.finished = FALSE";
+
+        List<Borrow> brws =  this.entityManager.createQuery(query, Borrow.class)
+                               .setParameter("userId", userId)
+                               .getResultList();
+
+       int count = 0;
+
+       for (Borrow borrow : brws) {
+           count += borrow.getBooks().size();
+       }
+
+
+       return count;
     }
 
     /**
@@ -77,8 +113,24 @@ public class BorrowRepository implements CRUDRepository<String, Borrow> {
      * @return la liste des emprunt en retard
      */
     public List<Borrow> foundAllLateBorrow() {
-        // TODO
-        return null;
+        String query = "SELECT b FROM Borrow b WHERE b.finished = FALSE";
+        LocalDate curDate = LocalDate.now(); 
+
+        List<Borrow> brws = this.entityManager.createQuery(query, Borrow.class)       
+                               .getResultList();
+
+         List<Borrow> res = new ArrayList<Borrow>();
+
+        for (Borrow borrow : brws) {
+            LocalDate temp = LocalDate.ofInstant(borrow.getRequestedReturn().toInstant(),  ZoneId.systemDefault());
+            int diff = Period.between(curDate, temp).getDays();
+
+            if (diff < 0) {
+                res.add(borrow);
+            }
+        }
+        
+        return res;
     }
 
     /**
@@ -88,8 +140,26 @@ public class BorrowRepository implements CRUDRepository<String, Borrow> {
      * @return les emprunt qui sont bientôt en retard
      */
     public List<Borrow> findAllBorrowThatWillLateWithin(int days) {
-        // TODO
-        return null;
+    
+        String query = "SELECT b FROM Borrow b WHERE b.finished = FALSE";
+
+        LocalDate curDate = LocalDate.now(); 
+
+        List<Borrow> brws = this.entityManager.createQuery(query, Borrow.class)       
+                               .getResultList();
+        
+        List<Borrow> res = new ArrayList<Borrow>();
+
+        for (Borrow borrow : brws) {
+            LocalDate temp = LocalDate.ofInstant(borrow.getRequestedReturn().toInstant(),  ZoneId.systemDefault());
+            int diff = Period.between(curDate, temp).getDays();
+
+            if (diff < days) {
+                res.add(borrow);
+            }
+        }
+
+        return res;
     }
 
 }

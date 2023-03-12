@@ -5,6 +5,10 @@ import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -44,8 +48,24 @@ public class UserRepository implements CRUDRepository<String, User> {
      * @return
      */
     public List<User> findAllOlderThan(int age) {
-        // TODO
-        return null;
+        LocalDate curDate = LocalDate.now(); 
+     
+        String query = "SELECT u FROM User u";
+
+       List<User> users = entityManager.createQuery(query, User.class).getResultList();
+       List<User> res = new ArrayList<>();
+
+       for (User user : users) {
+           
+           LocalDate temp = LocalDate.ofInstant(user.getBirth().toInstant(),  ZoneId.systemDefault());
+           int ageUsr = Period.between(temp, curDate).getYears();
+
+           if (ageUsr > age) {
+               res.add(user);
+           }
+       }
+
+       return res;
     }
 
 }

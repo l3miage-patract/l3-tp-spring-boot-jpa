@@ -32,7 +32,7 @@ class AuthorRepositoryTest extends Base {
         assertThat(authors).containsExactly(a1);
 
     }
-
+    
     @Test
     void findAuthorByIdHavingCoAuthoredBooks() {
 

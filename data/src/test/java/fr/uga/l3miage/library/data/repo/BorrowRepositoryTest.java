@@ -69,10 +69,12 @@ class BorrowRepositoryTest extends Base {
         Borrow inProgress = Fixtures.newBorrow(u1, l1, b1, b2);
         Borrow finished = Fixtures.newBorrow(u1, l1, b3);
         finished.setRequestedReturn(new Date());
+        
         finished.setFinished(true);
         entityManager.persist(inProgress);
         entityManager.persist(finished);
         entityManager.flush();
+       
 
         List<Borrow> progressByUser = repository.findInProgressByUser(u1.getId());
         assertThat(progressByUser).containsExactly(inProgress);
@@ -81,23 +83,53 @@ class BorrowRepositoryTest extends Base {
 
     @Test
     void countCurrentBorrowedBooksByUser() {
+        Borrow inProgress = Fixtures.newBorrow(u1, l1, b1, b2);
+        Borrow finished = Fixtures.newBorrow(u1, l1, b3);
+        finished.setRequestedReturn(new Date());
+        
+        finished.setFinished(true);
+        entityManager.persist(inProgress);
+        entityManager.persist(finished);
+        entityManager.flush();
+       
+        int res = this.repository.countCurrentBorrowedBooksByUser(u1.getId());
 
-        // TODO
-
+        assertThat(res).isEqualTo(2);
     }
 
     @Test
     void countBorrowedBooksByUser() {
 
-        // TODO
+        Borrow brw1 = Fixtures.newBorrow(u1, l1, b1, b2);
+        Borrow brw2 = Fixtures.newBorrow(u1, l1, b3);
+     
+   
+        entityManager.persist(brw1);
+        entityManager.persist(brw2);
+        entityManager.flush();
+       
+        int res = this.repository.countBorrowedBooksByUser(u1.getId());
+        assertThat(res).isEqualTo(3);
 
     }
 
     @Test
     void foundAllLateBorrow() {
+        Borrow lateSince5Days = Fixtures.newBorrow(u1, l1, b1);
+        lateSince5Days.setRequestedReturn(Date.from(ZonedDateTime.now().plus(-5, ChronoUnit.DAYS).toInstant()));
+        Borrow lateIn10Days = Fixtures.newBorrow(u1, l1, b2);
+        lateIn10Days.setRequestedReturn(Date.from(ZonedDateTime.now().plus(10, ChronoUnit.DAYS).toInstant()));
+        Borrow lateIn15Days = Fixtures.newBorrow(u2, l1, b3);
+        lateIn15Days.setRequestedReturn(Date.from(ZonedDateTime.now().plus(15, ChronoUnit.DAYS).toInstant()));
+        
+        entityManager.persist(lateSince5Days);
+        entityManager.persist(lateIn10Days);
+        entityManager.persist(lateIn15Days);
+        entityManager.flush();
 
-        // TODO
+        List<Borrow> borrows = repository.foundAllLateBorrow();
 
+        assertThat(borrows).containsExactlyInAnyOrder(lateSince5Days);
     }
 
     @Test
@@ -109,7 +141,7 @@ class BorrowRepositoryTest extends Base {
         lateIn10Days.setRequestedReturn(Date.from(ZonedDateTime.now().plus(10, ChronoUnit.DAYS).toInstant()));
         Borrow lateIn15Days = Fixtures.newBorrow(u2, l1, b3);
         lateIn15Days.setRequestedReturn(Date.from(ZonedDateTime.now().plus(15, ChronoUnit.DAYS).toInstant()));
-
+        
         entityManager.persist(lateIn5Days);
         entityManager.persist(lateIn10Days);
         entityManager.persist(lateIn15Days);

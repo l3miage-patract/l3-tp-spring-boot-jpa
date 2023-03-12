@@ -3,12 +3,44 @@ package fr.uga.l3miage.library.data.domain;
 import java.util.Date;
 import java.util.Objects;
 
-public abstract class Person {
+import org.hibernate.annotations.GenericGenerator;
+import org.springframework.lang.NonNull;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name="TYPE_ENTITE")
+public abstract class Person {
+    
+    @NonNull
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
     private String id;
+
+    @Column(name = "gender")
+    @Enumerated(EnumType.STRING)
     private Gender gender;
+    
+    @Column(name = "firstName")
     private String firstName;
+    
+    @Column(name = "lastName")
     private String lastName;
+    
+    @Column(name = "birth")
+    @Temporal(TemporalType.DATE)
     private Date birth;
 
     public enum Gender {
